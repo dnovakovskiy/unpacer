@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 295" width="920" height="295" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <rect width="920" height="295" rx="20" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+
+  <text x="28" y="36" fill="#0f172a" font-size="18" font-weight="800">Hilly Race Pacer: Watch Target Shifts Automatically With the Hills</text>
+  <text x="28" y="56" fill="#475569" font-size="13" font-weight="500">Example: Hilly 15K Course (7 natural terrain gears instead of 15 separate kilometer alarms)</text>
+
+  <!-- 7 Gear Cards -->
+  <g transform="translate(46, 70)" font-size="12" font-weight="800" text-anchor="middle">
+    <rect x="0" y="0" width="106" height="44" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="53" y="18" fill="#0369a1">1. Start (2K)</text>
+    <text x="53" y="36" fill="#0f172a">4:01 - 4:07</text>
+
+    <rect x="112" y="0" width="160" height="44" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="192" y="18" fill="#b45309">2. Big Climb (Km 3-5)</text>
+    <text x="192" y="36" fill="#0f172a">4:04 - 4:10</text>
+
+    <rect x="278" y="0" width="214" height="44" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+    <text x="385" y="18" fill="#047857">3. Rolling Hills (Km 6-9)</text>
+    <text x="385" y="36" fill="#0f172a">3:57 - 4:03</text>
+
+    <rect x="498" y="0" width="68" height="44" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="532" y="18" fill="#0369a1">4. Drop</text>
+    <text x="532" y="36" fill="#0f172a">3:46</text>
+
+    <rect x="572" y="0" width="68" height="44" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+    <text x="606" y="18" fill="#c2410c">5. Wall</text>
+    <text x="606" y="36" fill="#0f172a">4:06</text>
+
+    <rect x="646" y="0" width="96" height="44" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+    <text x="694" y="18" fill="#047857">6. Fast (2K)</text>
+    <text x="694" y="36" fill="#0f172a">3:50 - 3:56</text>
+
+    <rect x="748" y="0" width="98" height="44" rx="8" fill="#10b981" stroke="#047857" stroke-width="2"/>
+    <text x="797" y="18" fill="#ffffff">7. Kick (2K)</text>
+    <text x="797" y="36" fill="#ffffff">3:39 - 3:46</text>
+  </g>
+
+  <!-- Elevation Area -->
+  <g transform="translate(46, 126)">
+    <line x1="0" y1="115" x2="846" y2="115" stroke="#94a3b8" stroke-width="2"/>
+    <line x1="108" y1="0" x2="108" y2="115" stroke="#cbd5e1" stroke-dasharray="4,4"/>
+    <line x1="274" y1="0" x2="274" y2="115" stroke="#cbd5e1" stroke-dasharray="4,4"/>
+    <line x1="494" y1="0" x2="494" y2="115" stroke="#cbd5e1" stroke-dasharray="4,4"/>
+    <line x1="566" y1="0" x2="566" y2="115" stroke="#cbd5e1" stroke-dasharray="4,4"/>
+    <line x1="640" y1="0" x2="640" y2="115" stroke="#cbd5e1" stroke-dasharray="4,4"/>
+    <line x1="742" y1="0" x2="742" y2="115" stroke="#cbd5e1" stroke-dasharray="4,4"/>
+
+    <path d="M 0,100 L 54,92 L 108,86 L 164,64 L 220,40 L 274,22 L 330,36 L 385,24 L 440,42 L 494,28 L 566,78 L 640,32 L 690,54 L 742,70 L 795,94 L 846,110 L 846,115 L 0,115 Z" fill="#a7f3d0" opacity="0.65"/>
+    <path d="M 0,100 L 54,92 L 108,86 L 164,64 L 220,40 L 274,22 L 330,36 L 385,24 L 440,42 L 494,28 L 566,78 L 640,32 L 690,54 L 742,70 L 795,94 L 846,110" fill="none" stroke="#059669" stroke-width="3.5"/>
+
+    <text x="200" y="16" text-anchor="middle" fill="#b45309" font-size="12" font-weight="800">+50m Uphill (Save Legs!)</text>
+    <text x="532" y="98" text-anchor="middle" fill="#0369a1" font-size="12" font-weight="800">Free Downhill Speed</text>
+    <text x="795" y="64" text-anchor="end" fill="#047857" font-size="13" font-weight="800">4K Downhill Finish → Sub-60!</text>
+
+    <g transform="translate(0, 136)" fill="#334155" font-size="12" font-weight="700" text-anchor="middle">
+      <text x="0">Start</text>
+      <text x="108">2K</text>
+      <text x="274">5K</text>
+      <text x="494">9K</text>
+      <text x="566">10K</text>
+      <text x="640">11K</text>
+      <text x="742">13K</text>
+      <text x="836">15K Finish</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 295" width="920" height="295" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <rect width="920" height="295" rx="20" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+
+  <text x="28" y="38" fill="#0f172a" font-size="18" font-weight="800">What You See on Your Watch While Running</text>
+  <text x="640" y="38" fill="#047857" font-size="13" font-weight="700">✓ Stay in the Green Zone</text>
+
+  <!-- CARD 1: INTERVALS -->
+  <g transform="translate(26, 54)">
+    <rect width="276" height="218" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="138" y="26" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="800">1. Fast Intervals &amp; Races</text>
+    <circle cx="138" cy="116" r="74" fill="#0f172a" stroke="#334155" stroke-width="6"/>
+    <path d="M 80 110 A 58 58 0 0 1 104 68" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round"/>
+    <path d="M 109 65 A 58 58 0 0 1 167 65" fill="none" stroke="#10b981" stroke-width="12" stroke-linecap="round"/>
+    <path d="M 172 68 A 58 58 0 0 1 196 110" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round"/>
+    <polygon points="138,56 133,68 143,68" fill="#ffffff"/>
+    <text x="138" y="90" text-anchor="middle" fill="#34d399" font-size="11" font-weight="700">GOAL 3:55 - 4:00</text>
+    <text x="138" y="124" text-anchor="middle" fill="#ffffff" font-size="28" font-weight="800">3:57</text>
+    <text x="138" y="146" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="700">1.4 km left</text>
+    <text x="138" y="166" text-anchor="middle" fill="#cbd5e1" font-size="11" font-weight="600">Rep 3 of 4</text>
+    <text x="138" y="207" text-anchor="middle" fill="#475569" font-size="12" font-weight="600">Tight 5-sec target window</text>
+  </g>
+
+  <!-- CARD 2: OPEN WARMUP -->
+  <g transform="translate(322, 54)">
+    <rect width="276" height="218" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="138" y="26" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="800">2. Open Warmup &amp; Drills</text>
+    <circle cx="138" cy="116" r="74" fill="#0f172a" stroke="#334155" stroke-width="6"/>
+    <path d="M 80 110 A 58 58 0 0 1 104 68" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round"/>
+    <path d="M 109 65 A 58 58 0 0 1 167 65" fill="none" stroke="#10b981" stroke-width="12" stroke-linecap="round"/>
+    <path d="M 172 68 A 58 58 0 0 1 196 110" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round"/>
+    <polygon points="144,56 139,68 149,68" fill="#ffffff"/>
+    <text x="138" y="90" text-anchor="middle" fill="#34d399" font-size="11" font-weight="700">EASY 4:45 - 5:25</text>
+    <text x="138" y="124" text-anchor="middle" fill="#ffffff" font-size="28" font-weight="800">5:04</text>
+    <text x="138" y="146" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="700">Until You Press [LAP]</text>
+    <text x="138" y="166" text-anchor="middle" fill="#cbd5e1" font-size="11" font-weight="600">Jog + Drills + Strides</text>
+    <text x="138" y="207" text-anchor="middle" fill="#475569" font-size="12" font-weight="600">Rep 1 starts when YOU press LAP</text>
+  </g>
+
+  <!-- CARD 3: HEAT / HR ZONE -->
+  <g transform="translate(618, 54)">
+    <rect width="276" height="218" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="138" y="26" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="800">3. Hot Weather &amp; Easy Runs</text>
+    <circle cx="138" cy="116" r="74" fill="#0f172a" stroke="#334155" stroke-width="6"/>
+    <path d="M 78 112 A 60 60 0 0 1 92 76" fill="none" stroke="#64748b" stroke-width="9"/>
+    <path d="M 96 72 A 60 60 0 0 1 134 56" fill="none" stroke="#38bdf8" stroke-width="13"/>
+    <path d="M 139 56 A 60 60 0 0 1 168 68" fill="none" stroke="#10b981" stroke-width="9"/>
+    <path d="M 172 72 A 60 60 0 0 1 188 92" fill="none" stroke="#f59e0b" stroke-width="9"/>
+    <path d="M 190 96 A 60 60 0 0 1 198 112" fill="none" stroke="#ef4444" stroke-width="9"/>
+    <polygon points="116,59 112,71 122,70" fill="#ffffff"/>
+    <text x="138" y="90" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="700">ZONE 2 (134 - 148)</text>
+    <text x="138" y="124" text-anchor="middle" fill="#ffffff" font-size="28" font-weight="800">♥ 141</text>
+    <text x="138" y="146" text-anchor="middle" fill="#34d399" font-size="12" font-weight="700">Easy Aerobic Zone</text>
+    <text x="138" y="166" text-anchor="middle" fill="#cbd5e1" font-size="11" font-weight="600">28°C Vacation / Recovery</text>
+    <text x="138" y="207" text-anchor="middle" fill="#475569" font-size="12" font-weight="600">No overheating in hot weather</text>
+  </g>
+</svg>

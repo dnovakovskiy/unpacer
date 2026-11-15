@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Garmin Fenix 8 Pro — Phone-Free Strength Simulator</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @keyframes calfMove {
+      0%, 100% { transform: translateY(0px); }
+      45% { transform: translateY(-7px); }
+    }
+    @keyframes squatMove {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(9px); }
+    }
+    @keyframes pulseMuscle {
+      0%, 100% { opacity: 0.65; }
+      50% { opacity: 1; }
+    }
+    .anim-calf { animation: calfMove 2.2s ease-in-out infinite; }
+    .anim-squat { animation: squatMove 2.4s ease-in-out infinite; }
+    .muscle-glow { animation: pulseMuscle 1.3s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-transparent text-[var(--foreground)] antialiased p-3">
+  <div class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+    <!-- Compact Top Header + Exercise Switcher -->
+    <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[var(--border)]">
+      <div>
+        <h2 class="text-sm font-semibold">Garmin Fenix 8 Pro (47mm) — How Phone-Free Strength Works on Your Wrist</h2>
+      </div>
+      <div class="flex items-center gap-1 text-xs">
+        <span class="text-[var(--muted-foreground)] mr-1">Demo Exercise:</span>
+        <button id="exBtn0" onclick="pickEx(0)" class="px-2 py-0.5 rounded border border-[var(--border)] font-medium">Seated Calf</button>
+        <button id="exBtn1" onclick="pickEx(1)" class="px-2 py-0.5 rounded border border-[var(--border)] font-medium">Split Squat</button>
+        <button id="exBtn2" onclick="pickEx(2)" class="px-2 py-0.5 rounded border border-[var(--border)] font-medium">1-Leg RDL</button>
+        <button id="exBtn3" onclick="pickEx(3)" class="px-2 py-0.5 rounded border border-[var(--border)] font-medium">DB Row</button>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Simulator (Fits <450px total height) -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-3 items-center">
+      <!-- LEFT: Realistic Fenix 8 Pro Titanium Bezel + Hardware Buttons -->
+      <div class="md:col-span-5 flex flex-col items-center">
+        <div class="relative flex items-center justify-center" style="width:286px;height:286px">
+          <!-- Left Hardware Buttons -->
+          <button onclick="prevState()" title="UP / MENU" class="absolute left-0 top-20 px-1.5 py-2 rounded-l-md text-xs font-bold border border-r-0" style="background:#334155;color:#e2e8f0;border-color:#475569">UP</button>
+          <button onclick="nextState()" title="DOWN (View Animation / Notes)" class="absolute left-0 bottom-20 px-1.5 py-2 rounded-l-md text-xs font-bold border border-r-0" style="background:#334155;color:#e2e8f0;border-color:#475569">DN</button>
+
+          <!-- Right Hardware Buttons (Fenix 8 Orange Guard + LAP/BACK) -->
+          <button onclick="pressStart()" title="START / STOP (Top Right)" class="absolute right-0 top-16 px-1.5 py-2.5 rounded-r-md text-xs font-extrabold shadow" style="background:#ea580c;color:#ffffff">START</button>
+          <button onclick="pressLap()" title="BACK / LAP (Finish Set!)" class="absolute right-0 bottom-16 px-1.5 py-2.5 rounded-r-md text-xs font-extrabold border border-l-0 shadow" style="background:#0ea5e9;color:#ffffff;border-color:#38bdf8">LAP</button>
+
+          <!-- Outer Titanium Bezel -->
+          <div class="rounded-full flex items-center justify-center shadow-lg border-4" style="width:244px;height:244px;background:linear-gradient(145deg,#475569,#1e293b);border-color:#64748b">
+            <!-- Inner AMOLED Display -->
+            <div id="amoledScreen" class="rounded-full flex flex-col items-center justify-between text-center p-4 relative overflow-hidden" style="width:216px;height:216px;background:#050811;color:#f8fafc;border:2px solid #0f172a">
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-1.5 flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+          <span>Click <strong style="color:#ea580c">START</strong> or <strong style="color:#0ea5e9">LAP</strong> on the watch bezel (or steps →)</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: 5-Screen Wrist Loop Stepper -->
+      <div class="md:col-span-7 flex flex-col justify-between gap-2">
+        <div id="stepsList" class="space-y-1.5"></div>
+
+        <div id="bottomTip" class="p-2.5 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs leading-snug">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const exercises = [
+      {
+        title: "Seated DB Calf Raise",
+        garminSub: "CALF_RAISE • Soleus",
+        sets: 4, reps: 12, kg: 28, rest: 60,
+        cue: "Heavy DBs on knees • 3s down, 1s pause, drive up",
+        muscle: "Soleus & Achilles",
+        svgType: "calf"
+      },
+      {
+        title: "DB Bulgarian Split Squat",
+        garminSub: "LUNGE • Quads & Glutes",
+        sets: 3, reps: 8, kg: 14, rest: 75,
+        cue: "8/leg (2×14kg) • Slight forward lean, 3s lower",
+        muscle: "Quads & Glute Med",
+        svgType: "squat"
+      },
+      {
+        title: "1-Leg DB Romanian DL",
+        garminSub: "DEADLIFT • Hamstrings",
+        sets: 3, reps: 8, kg: 18, rest: 75,
+        cue: "8/leg (18kg opp hand) • Keep pelvis dead-level",
+        muscle: "Hamstrings & Glutes",
+        svgType: "rdl"
+      },
+      {
+        title: "One-Arm DB Bench Row",
+        garminSub: "ROW • Lats & Posture",
+        sets: 3, reps: 10, kg: 20, rest: 60,
+        cue: "10/arm on bench • Pull to hip, relax neck",
+        muscle: "Upper Back & Lats",
+        svgType: "row"
+      }
+    ];
+
+    const states = [
+      {
+        num: 1,
+        title: "1. Pick Workout on Wrist (Phone Stays in Locker)",
+        short: "Press START → Strength → Workouts → Free-Gym A → Do Workout",
+        tip: "<strong>Zero phone friction:</strong> All 3 workouts (<code>Free-Gym A</code>, <code>Free-Gym B</code>, <code>8m Finisher</code>) are stored locally on your Fenix 8 Pro. If scheduled on a day, pressing <strong>START → Strength</strong> pops it up automatically."
+      },
+      {
+        num: 2,
+        title: "2. Built-In 3D Muscle Animation + Cue Appears",
+        short: "Watch previews the movement, highlighted target muscles, reps & start kg",
+        tip: "<strong>Never open YouTube again:</strong> Before Set 1 (or anytime by pressing <strong>DOWN</strong>), Garmin's built-in AMOLED animation loops right on your wrist showing exact posture + glowing target muscles, plus my 1-line form note."
+      },
+      {
+        num: 3,
+        title: "3. Do Your Set → Press Bottom-Right [LAP]",
+        short: "Accelerometer counts reps automatically; press LAP when you rack DBs",
+        tip: "<strong>Zero distraction during the set:</strong> Just lift cleanly, count your 8–12 reps, rack the dumbbells, and tap the physical <strong>LAP</strong> button (bottom-right) once."
+      },
+      {
+        num: 4,
+        title: "4. 2-Second Rep & Weight Confirm (+ / -)",
+        short: "Did 13 reps or grabbed 30 kg instead of 28 kg? Adjust in 2 taps",
+        tip: "<strong>Tracks progressive overload automatically:</strong> Watch pre-fills target <code>reps</code> and <code>kg</code>. If exact, just tap <strong>START (✓)</strong>; if you went heavier, tap <code>+</code> once—Garmin logs every kg in your strength history."
+      },
+      {
+        num: 5,
+        title: "5. Auto Rest Countdown → Wrist Buzz → Next Set!",
+        short: "60s/75s timer runs automatically, shows 'Next Up', and vibrates at 0:00",
+        tip: "<strong>Keeps gym sessions crisp (~38–40 min):</strong> No wandering or scrolling between sets. At <code>0:05..0:00</code> your wrist buzzes and automatically cues Set 2 (or transitions to the next exercise animation)."
+      }
+    ];
+
+    let curEx = 0;
+    let curState = 1; // Default open right on the 3D Muscle Animation screen!
+    let timerTick = 19;
+    let restTick = 58;
+    let editKgOffset = 0;
+
+    setInterval(() => {
+      timerTick = (timerTick + 1) % 45;
+      restTick = restTick > 3 ? restTick - 1 : 60;
+      if (curState === 2 || curState === 4) renderWatch();
+    }, 1000);
+
+    function getAnimationSvg(type) {
+      if (type === 'calf') {
+        return `
+          <svg width="92" height="72" viewBox="0 0 100 78" class="mx-auto">
+            <!-- Bench -->
+            <rect x="18" y="46" width="32" height="5" rx="2" fill="#475569"/>
+            <line x1="24" y1="51" x2="24" y2="70" stroke="#475569" stroke-width="3"/>
+            <line x1="44" y1="51" x2="44" y2="70" stroke="#475569" stroke-width="3"/>
+            <!-- Step block -->
+            <rect x="64" y="64" width="18" height="6" rx="1" fill="#64748b"/>
+            <!-- Torso & Head -->
+            <circle cx="34" cy="14" r="6" fill="#cbd5e1"/>
+            <line x1="34" y1="20" x2="34" y2="44" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
+            <!-- Moving Knee + Dumbbell + Glowing Soleus -->
+            <g class="anim-calf">
+              <line x1="34" y1="44" x2="66" y2="44" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
+              <!-- DB on knee -->
+              <rect x="57" y="34" width="14" height="7" rx="2" fill="#38bdf8"/>
+              <!-- Lower leg + Glowing Soleus muscle -->
+              <line x1="66" y1="44" x2="68" y2="64" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+              <ellipse cx="64" cy="54" rx="4.5" ry="7" fill="#ef4444" class="muscle-glow"/>
+              <line x1="68" y1="64" x2="77" y2="64" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round"/>
+            </g>
+          </svg>`;
+      }
+      if (type === 'squat') {
+        return `
+          <svg width="92" height="72" viewBox="0 0 100 78" class="mx-auto">
+            <!-- Rear Bench -->
+            <rect x="14" y="48" width="22" height="5" rx="2" fill="#475569"/>
+            <line x1="18" y1="53" x2="18" y2="72" stroke="#475569" stroke-width="3"/>
+            <line x1="32" y1="53" x2="32" y2="72" stroke="#475569" stroke-width="3"/>
+            <g class="anim-squat">
+              <circle cx="58" cy="12" r="5.5" fill="#cbd5e1"/>
+              <line x1="58" y1="18" x2="54" y2="40" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
+              <!-- Glowing Quad & Glute -->
+              <line x1="54" y1="40" x2="70" y2="52" stroke="#ef4444" stroke-width="6" stroke-linecap="round" class="muscle-glow"/>
+              <circle cx="52" cy="41" r="4.5" fill="#f97316" class="muscle-glow"/>
+              <!-- Rear leg to bench -->
+              <line x1="54" y1="40" x2="34" y2="48" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+              <!-- DB in hand -->
+              <rect x="51" y="34" width="11" height="5" rx="1.5" fill="#38bdf8"/>
+            </g>
+            <!-- Planted shin -->
+            <line x1="70" y1="52" x2="70" y2="72" stroke="#cbd5e1" stroke-width="4.5" stroke-linecap="round"/>
+          </svg>`;
+      }
+      if (type === 'rdl') {
+        return `
+          <svg width="92" height="72" viewBox="0 0 100 78" class="mx-auto">
+            <g class="anim-squat">
+              <circle cx="74" cy="24" r="5.5" fill="#cbd5e1"/>
+              <!-- Hinged torso + back leg -->
+              <line x1="70" y1="26" x2="48" y2="36" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
+              <line x1="48" y1="36" x2="20" y2="32" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+              <!-- Hanging arm + DB -->
+              <line x1="65" y1="29" x2="65" y2="50" stroke="#cbd5e1" stroke-width="3.5"/>
+              <rect x="59" y="50" width="12" height="6" rx="1.5" fill="#38bdf8"/>
+            </g>
+            <!-- Standing leg with glowing hamstring/glute -->
+            <circle cx="48" cy="37" r="5" fill="#f97316" class="muscle-glow"/>
+            <line x1="48" y1="38" x2="50" y2="72" stroke="#ef4444" stroke-width="5.5" stroke-linecap="round" class="muscle-glow"/>
+          </svg>`;
+      }
+      return `
+        <svg width="92" height="72" viewBox="0 0 100 78" class="mx-auto">
+          <rect x="26" y="48" width="46" height="5" rx="2" fill="#475569"/>
+          <line x1="32" y1="53" x2="32" y2="72" stroke="#475569" stroke-width="3"/>
+          <line x1="66" y1="53" x2="66" y2="72" stroke="#475569" stroke-width="3"/>
+          <circle cx="72" cy="26" r="5.5" fill="#cbd5e1"/>
+          <!-- Glowing Lat / Upper back -->
+          <line x1="66" y1="29" x2="40" y2="34" stroke="#ef4444" stroke-width="6" stroke-linecap="round" class="muscle-glow"/>
+          <line x1="40" y1="34" x2="36" y2="48" stroke="#94a3b8" stroke-width="4"/>
+          <line x1="64" y1="30" x2="64" y2="48" stroke="#94a3b8" stroke-width="3.5"/>
+          <g class="anim-calf">
+            <line x1="56" y1="32" x2="52" y2="52" stroke="#cbd5e1" stroke-width="4"/>
+            <rect x="46" y="51" width="12" height="6" rx="1.5" fill="#38bdf8"/>
+          </g>
+        </svg>`;
+    }
+
+    function renderWatch() {
+      const ex = exercises[curEx];
+      const scr = document.getElementById('amoledScreen');
+      const dispKg = ex.kg + editKgOffset;
+
+      if (curState === 0) {
+        scr.innerHTML = `
+          <div class="text-xs font-bold tracking-wider" style="color:#10b981">STRENGTH • WORKOUTS</div>
+          <div class="w-full space-y-1 my-1 text-left px-2">
+            <div class="p-1.5 rounded text-xs font-bold border" style="background:#1e293b;border-color:#ea580c;color:#ffffff">▶ Free-Gym A: Lower</div>
+            <div class="p-1 rounded text-xs opacity-65" style="color:#cbd5e1">  Free-Gym B: Posture</div>
+            <div class="p-1 rounded text-xs opacity-65" style="color:#cbd5e1">  8m Soleus Finisher</div>
+          </div>
+          <div class="text-xs font-semibold" style="color:#fb923c">Press START →</div>
+        `;
+      } else if (curState === 1) {
+        scr.innerHTML = `
+          <div class="text-xs font-bold" style="color:#f97316">${ex.muscle}</div>
+          ${getAnimationSvg(ex.svgType)}
+          <div>
+            <div class="text-xs font-bold leading-tight">${ex.title}</div>
+            <div class="text-xs font-semibold mt-0.5" style="color:#38bdf8">Set 1/${ex.sets} • ${ex.reps} reps @ ${ex.kg}kg</div>
+          </div>
+        `;
+      } else if (curState === 2) {
+        const secStr = String(timerTick).padStart(2, '0');
+        scr.innerHTML = `
+          <div class="text-xs font-bold tracking-wide" style="color:#10b981">ACTIVE • SET 1 OF ${ex.sets}</div>
+          <div class="my-0.5">
+            <div class="text-xs font-semibold" style="color:#cbd5e1">${ex.title}</div>
+            <div class="text-2xl font-extrabold font-mono mt-0.5" style="color:#ffffff">0:${secStr}</div>
+            <div class="text-xs font-bold mt-0.5" style="color:#38bdf8">Target: ${ex.reps} reps • ${ex.kg} kg</div>
+          </div>
+          <div class="text-xs px-2 py-0.5 rounded-full" style="background:#0ea5e9;color:#ffffff">Done? Press LAP ↘</div>
+        `;
+      } else if (curState === 3) {
+        scr.innerHTML = `
+          <div class="text-xs font-bold" style="color:#fbbf24">CONFIRM SET 1</div>
+          <div class="w-full px-3 space-y-1.5 my-1">
+            <div class="flex items-center justify-between text-xs bg-slate-900 px-2 py-1 rounded border border-slate-700">
+              <span style="color:#94a3b8">Reps:</span>
+              <span class="font-extrabold text-sm" style="color:#ffffff">${ex.reps} ✓</span>
+            </div>
+            <div class="flex items-center justify-between text-xs bg-slate-900 px-2 py-1 rounded border border-amber-500/60">
+              <button onclick="adjKg(-2)" class="px-1.5 font-bold rounded bg-slate-800">−</button>
+              <span class="font-extrabold" style="color:#fbbf24">${dispKg} kg</span>
+              <button onclick="adjKg(2)" class="px-1.5 font-bold rounded bg-slate-800">+</button>
+            </div>
+          </div>
+          <div class="text-xs font-semibold" style="color:#ea580c">START (✓) → Rest</div>
+        `;
+      } else {
+        const rStr = String(restTick).padStart(2, '0');
+        scr.innerHTML = `
+          <div class="text-xs font-bold tracking-wider" style="color:#38bdf8">REST TIMER</div>
+          <div class="my-0.5">
+            <div class="text-3xl font-extrabold font-mono" style="color:#ffffff">0:${rStr}</div>
+            <div class="text-xs mt-1" style="color:#94a3b8">Up Next: <strong style="color:#f8fafc">Set 2 of ${ex.sets}</strong></div>
+            <div class="text-xs font-semibold" style="color:#10b981">${ex.reps} reps @ ${dispKg} kg</div>
+          </div>
+          <div class="text-xs" style="color:#fbbf24">📳 Buzzes wrist at 0:00</div>
+        `;
+      }
+    }
+
+    function renderSteps() {
+      exercises.forEach((_, idx) => {
+        const b = document.getElementById('exBtn' + idx);
+        b.style.background = idx === curEx ? '#10b981' : 'transparent';
+        b.style.color = idx === curEx ? '#ffffff' : 'inherit';
+      });
+
+      let html = '';
+      states.forEach((st, idx) => {
+        const active = idx === curState;
+        html += `
+          <div onclick="setState(${idx})" class="p-2 rounded-lg border cursor-pointer transition flex items-center justify-between gap-2"
+               style="${active ? 'border-color:#10b981;background:rgba(16,185,129,0.10)' : 'border-color:var(--border)'}">
+            <div>
+              <div class="text-xs font-semibold">${st.title}</div>
+              <div class="text-xs text-[var(--muted-foreground)]">${st.short}</div>
+            </div>
+            <span class="text-xs font-bold px-2 py-0.5 rounded" style="${active ? 'background:#10b981;color:#fff' : 'color:var(--muted-foreground)'}">${active ? 'ON WRIST' : 'View'}</span>
+          </div>
+        `;
+      });
+      document.getElementById('stepsList').innerHTML = html;
+      document.getElementById('bottomTip').innerHTML = states[curState].tip + ` <span class="text-[var(--muted-foreground)]">• <em>Watch Note: "${exercises[curEx].cue}"</em></span>`;
+    }
+
+    function pickEx(i) { curEx = i; editKgOffset = 0; renderWatch(); renderSteps(); }
+    function setState(s) { curState = s; renderWatch(); renderSteps(); }
+    function nextState() { setState((curState + 1) % 5); }
+    function prevState() { setState((curState + 4) % 5); }
+    function pressStart() {
+      if (curState === 0) setState(1);
+      else if (curState === 1) setState(2);
+      else if (curState === 3) { restTick = exercises[curEx].rest; setState(4); }
+      else nextState();
+    }
+    function pressLap() {
+      if (curState === 2) setState(3);
+      else if (curState === 4) { timerTick = 1; setState(2); }
+      else nextState();
+    }
+    function adjKg(d) { editKgOffset += d; renderWatch(); }
+
+    renderWatch();
+    renderSteps();
+  </script>
+</body>
+</html>

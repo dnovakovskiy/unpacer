@@ -1,0 +1,32 @@
+# Outbound Secrets & OAuth Tokens (NEVER COMMIT)
+*tokens*.json
+*credentials*
+.env
+.env.*
+*.pem
+*.key
+
+# Personal Athlete Telemetry & Raw Data Vaults
+*_vault/
+*SOURCE_*.json
+*.tar.gz
+*.fit
+*.tcx
+*.gpx
+strava_race_photos/
+
+# Python & Virtualenvs
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.uv/
+.pytest_cache/
+.ruff_cache/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
