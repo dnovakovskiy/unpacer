@@ -79,8 +79,34 @@ Opening YouTube videos between sets kills gym momentum. `unpacer` paces your str
 
 ---
 
+## How to Install & Start (No Coding Required)
+
+You don't need to install software or edit config files yourself. Your AI assistant ([`AGENTS.md`](AGENTS.md)) sets everything up for you.
+
+### 1. Copy-Paste This to Your AI Agent (Antigravity, Claude Code, Cursor, Codex)
+```text
+Read https://github.com/dnovakovskiy/unpacer (start with AGENTS.md), install the unpacer skill for me, help me connect my Garmin and Strava accounts, and build my runner profile from my past workouts.
+```
+
+### 2. What Your Agent Will Do Automatically
+1. **Connects your watch:** Helps you log in once to Garmin Connect (and optionally Strava), saving your session privately on your own machine (`~/.unpacer/credentials/`).
+2. **Reads your running history:** Checks your recent runs, race chip times, shoes, and how many days a week you actually like to run.
+3. **Asks 3 quick questions:**
+   * **Mode 1 (`Full AI Coach & Pacer`)** or **Mode 2 (`Bring Your Own Coach`)**?
+   * What races and trips are on your calendar?
+   * How did your last race feel?
+
+### 3. Things You Can Just Say to Your Agent Afterward
+* *"Plan my next 12 weeks for a Sub-1:25 Half Marathon in March. I have a 1-week ski trip in January and a 10K tune-up in February."*
+* *"My coach sent me `WU 15m, 4x2km @ 3:55-4:00 / 2m jog, CD 15m` for Tuesday. Put it on my watch with pace gauges."*
+* *"Here is the course map for Sunday's 15K race. Give me a race-morning visual briefing and load a hill-by-hill pacer onto my watch."*
+* *"Load two 40-minute phone-free runner strength workouts onto my Garmin watch."*
+
+---
+
 ## What Else Is Inside
 
+* **[AGENTS.md](AGENTS.md)** - Step-by-step setup and operating instructions for your AI agent.
 * **[ROADMAP.md](ROADMAP.md)** - What is live today vs. what is coming next (Apple Watch support, 5-minute friend setup, automatic gym weight bumps).
 * **[examples/](examples/)** - Interactive watch simulator and sample Garmin workout payloads ([Watch Gym Simulator](examples/fenix8_strength_simulator.html), [Sample Strength Workout JSON](examples/sample_strength_freegym_a.json)).
 * **[skills/unpacer/SKILL.md](skills/unpacer/SKILL.md)** & **[scripts/unpacer_cli.py](scripts/unpacer_cli.py)** - The skill pack and Garmin/Strava helper for your AI assistant.

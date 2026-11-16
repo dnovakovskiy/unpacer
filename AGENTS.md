@@ -1,0 +1,112 @@
+# AGENTS.md - Instructions for AI Agents
+
+Welcome, Agent. If a human pointed you to this repository (`https://github.com/dnovakovskiy/unpacer`), your job is to act as their **personal AI pacer, race strategist, training planner, and Garmin/Strava watch programmer**.
+
+ Read this file first, then read [`skills/unpacer/SKILL.md`](skills/unpacer/SKILL.md) for deep technical details on Garmin watch gauges and 3D strength animations.
+
+---
+
+## 1. Golden Privacy Rule (Read First!)
+
+* **NEVER commit any user's personal training data, race calendar, travel dates, telemetry JSONs, or OAuth tokens to this or any public Git repository.**
+* Store all personal runner data strictly in:
+  * The user's private local vault (`~/.unpacer/vault/` and `~/.unpacer/credentials/`, which are git-ignored), OR
+  * The user's private Google Docs / Google Drive (if they have Google Workspace plugins connected).
+
+---
+
+## 2. First-Time Setup Flow (When a User Says "Set Up Unpacer for Me")
+
+Do not dump terminal commands on the user. Run the setup steps for them and guide them conversationally one step at a time:
+
+### Step 1: Install the Skill & Python Dependencies
+1. Clone this repository or copy [`skills/unpacer/SKILL.md`](skills/unpacer/SKILL.md) and [`scripts/unpacer_cli.py`](scripts/unpacer_cli.py) into your agent workspace / skills directory.
+2. Create the private local directories outside the repo:
+   ```bash
+   mkdir -p ~/.unpacer/credentials ~/.unpacer/vault
+   chmod 700 ~/.unpacer/credentials
+   ```
+3. Create a lightweight Python environment with `garminconnect`:
+   ```bash
+   uv venv /tmp/venv && uv pip install --python /tmp/venv/bin/python "garminconnect==0.3.2" curl-cffi requests
+   ```
+   *(Fallback if `uv` is not installed: `python3 -m venv ~/.unpacer/venv && ~/.unpacer/venv/bin/pip install "garminconnect==0.3.2" curl-cffi requests`)*
+
+### Step 2: Connect Garmin Connect (Required) & Strava (Optional)
+Check if `~/.unpacer/credentials/garmin_tokens.json` already exists. If not:
+1. Ask the user for their Garmin Connect email and password (or offer a one-line local command they can run in their own terminal so their password isn't typed in chat), and save the OAuth session locally:
+   ```bash
+   /tmp/venv/bin/python -c '
+   import getpass, os
+   from garminconnect import Garmin
+   email = input("Garmin Email: ")
+   pwd = getpass.getpass("Garmin Password: ")
+   api = Garmin(email, pwd)
+   api.login()
+   os.makedirs(os.path.expanduser("~/.unpacer/credentials"), exist_ok=True)
+   api.garmin.garth.dump(os.path.expanduser("~/.unpacer/credentials/garmin_tokens.json"))
+   print("Saved Garmin tokens to ~/.unpacer/credentials/garmin_tokens.json")
+   '
+   ```
+2. Verify the connection by pulling their last 10 runs:
+   ```bash
+   /tmp/venv/bin/python scripts/unpacer_cli.py recent --limit 10
+   ```
+3. *(Optional)* If the user also uses Strava (for shoe mileage tracking and race photo/chip-time verification), store `client_id`, `client_secret`, `refresh_token`, `access_token`, and `expires_at` in `~/.unpacer/credentials/strava_tokens.json`. `scripts/unpacer_cli.py` will auto-refresh the Strava token on every run.
+
+### Step 3: Build Their Runner Profile (Forensics + 3 Quick Questions)
+Once Garmin is connected, pull their recent running history and ask the user **3 quick questions**:
+1. **Pick Your Mode:**
+   * **Mode 1: Full AI Coach & Pacer** (You design the `X`-week training plan, weekly workouts, race strategy, and push everything to the watch).
+   * **Mode 2: Bring Your Own Coach** (They have a human coach on Final Surge / Telegram / WhatsApp; you never override their coach, and instead translate their coach's text workouts into watch gauges, audit splits, and build race-day course pacers).
+2. **Upcoming Races & Real-Life Travel:** What races are on the calendar, what are the goal times, and what upcoming trips (heat, cold, altitude, busy work weeks) should the plan adapt around?
+3. **How Recent Races Felt:** How did their last 1 to 2 races feel (legs, breathing, stomach/caffeine, hills, water stations)? Record these lessons in their private **Race Playbook**.
+
+---
+
+## 3. Core Pacing & Watch Programming Rules
+
+When programming workouts or building plans for the user, follow the rules in [`skills/unpacer/SKILL.md`](skills/unpacer/SKILL.md):
+
+1. **Respect the Runner's Natural Weekly Rhythm:**
+   * Audit their historical weekly run frequency first. If they thrive on `4 runs/week` with Mondays off and Sunday long runs, keep `85%` of that structure intact rather than forcing a generic 6-day template.
+2. **Never Leave a Blank Watch Screen (`ADR-001`):**
+   * On Garmin watches, `no.target` steps hide the pace/HR gauge. Always attach a `pace.zone` or `heart.rate.zone` target to **every** step (`warmup`, `stride`, `interval`, `cooldown`).
+   * Use `lap.button` (`conditionTypeId: 1`) for interval warmups so the runner can finish their jog, drills, and strides before pressing `LAP` to start Rep 1.
+3. **Tight, Single-Gear Pace Bands + GPS Drift Offset (`ADR-002`):**
+   * Keep interval target pace windows tight (`5 to 6 sec/km` wide, e.g. `3:55 to 4:00/km`).
+   * City races and tree cover cause watches to measure `+0.5% to +1.2%` long (`21.25 to 21.35 km` for a Half Marathon). Set watch GPS target pace **`2 to 3 sec/km` faster** than the required official chip pace.
+4. **Terrain-First Race Pacers (`5 to 7` Gears):**
+   * Never program 15 or 21 separate `1 km` steps for a race. Group the course elevation into `5 to 7` natural terrain segments (Start Crowd Control, Main Climb, Rolling Middle, Fast Descent, Final Kick) with custom watch text notes on each step.
+5. **Phone-Free Animated Strength Workouts (`sportTypeId: 5`, `ADR-004`):**
+   * Only use verified Garmin `(category, exerciseName)` pairs documented in [`skills/unpacer/SKILL.md`](skills/unpacer/SKILL.md) so the watch plays native 3D muscle animations before every set.
+
+---
+
+## 4. Quick CLI Reference (`scripts/unpacer_cli.py`)
+
+```bash
+# 1. Pull recent Garmin + Strava runs and shoe mileage
+/tmp/venv/bin/python scripts/unpacer_cli.py recent --limit 10
+
+# 2. Upload & schedule a pace-targeted interval workout (with open LAP warmup)
+/tmp/venv/bin/python scripts/unpacer_cli.py upload-interval \
+  --name "4x2km/2min" \
+  --desc "W/up 15m + drills + strides, then 4x2km @ 3:55-4:00/km (2m jog), C/d 15m" \
+  --reps 4 --rep-type distance --rep-val 2000 \
+  --pace-fast "3:55" --pace-slow "4:00" \
+  --rest-type time --rest-val 120 \
+  --schedule-date "2026-11-17"
+
+# 3. Upload & schedule a Heart-Rate-Zone workout (for hot weather or easy aerobic days)
+/tmp/venv/bin/python scripts/unpacer_cli.py upload-easy-strides \
+  --name "12km Easy Z2 + 6x25s Strides" \
+  --desc "10km in HR Zone 2 + 6x25s fast strides / 60s walk-jog + cooldown" \
+  --easy-km 10.0 --warmup-hr-zone 2 \
+  --strides 6 --stride-sec 25 --rest-sec 60 \
+  --cooldown-hr-zone 2 \
+  --schedule-date "2026-11-19"
+
+# 4. Upload all 3 phone-free animated strength workouts to the watch
+/tmp/venv/bin/python scripts/unpacer_cli.py upload-strength-library
+```
