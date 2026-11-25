@@ -36,9 +36,11 @@ If `.venv` or `/tmp/venv` is missing, bootstrap in `<1s`:
 uv venv /tmp/venv && uv pip install --python /tmp/venv/bin/python "garminconnect==0.3.2" curl-cffi requests
 ```
 
-Verify active credential and vault paths at any time:
+Verify active credential and vault paths or run one-time local OAuth login (password hidden, never saved):
 ```bash
 /tmp/venv/bin/python scripts/unpacer_cli.py paths
+/tmp/venv/bin/python scripts/unpacer_cli.py auth-garmin
+/tmp/venv/bin/python scripts/unpacer_cli.py auth-strava
 ```
 
 ---

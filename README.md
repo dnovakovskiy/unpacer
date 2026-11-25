@@ -84,7 +84,7 @@ Opening YouTube videos between sets kills gym momentum. `unpacer` paces your str
 `unpacer` separates the public coaching engine from your personal running life:
 
 * **Public repo (`dnovakovskiy/unpacer`):** Engine, agent skills, and CLI only. Zero personal data.
-* **OAuth credentials:** Strictly local-only (`~/.unpacer/credentials/`, `chmod 700`), never synced to Git or Google Drive.
+* **No passwords in chat:** Your agent never asks you to paste your Garmin password into chat. On your own machine, run one masked terminal command (`scripts/unpacer_cli.py auth-garmin` or `auth-strava`) that saves only a revocable OAuth session token locally in `~/.unpacer/credentials/` (`chmod 700`), never synced to Git or Google Drive. On a cloud VM, upload that token file (or use a temporary private Google Doc that gets trashed right after login). Just testing? Drop a `.gpx` course file or paste recent splits with zero account login.
 * **Personal athlete vault (`<athlete>-running-<year>`):** Your Master Plan, Race Playbook, telemetry cache, and visuals live in **one private backend** you choose during onboarding:
   * **(A) Local / iCloud / Obsidian folder:** `~/.unpacer/vault/<athlete>-running-<year>/` (or any custom path via `UNPACER_VAULT_DIR`).
   * **(B) Private Google Drive + Docs:** A private `<athlete>-running-<year>` folder in your own Drive.
@@ -100,12 +100,12 @@ You don't need to install software or edit config files yourself. Your AI assist
 
 ### 1. Copy-Paste This to Your AI Agent (Antigravity, Claude Code, Cursor, Codex)
 ```text
-Read https://github.com/dnovakovskiy/unpacer (start with AGENTS.md), install the unpacer skill for me, help me pick my private vault backend, connect my Garmin and Strava accounts, and build my runner profile from my past workouts.
+Read https://github.com/dnovakovskiy/unpacer (start with AGENTS.md), install the unpacer skill for me, help me pick my private vault backend, connect my Garmin and Strava accounts without putting passwords in chat, and build my runner profile from my past workouts.
 ```
 
 ### 2. What Your Agent Will Do Automatically
 1. **Sets up your private vault:** Asks you to pick one private backend (Local/iCloud/Obsidian, Private Google Drive + Docs, or a separate private GitHub repo) named `<athlete>-running-<year>`.
-2. **Connects your watch:** Helps you log in once to Garmin Connect (and optionally Strava), saving your session strictly locally on your own machine (`~/.unpacer/credentials/`, `chmod 700`).
+2. **Connects your watch safely:** Guides you through one masked local login (`auth-garmin` / `auth-strava`) so your password never appears in chat and only a local OAuth session token is saved in `~/.unpacer/credentials/` (`chmod 700`).
 3. **Reads your running history:** Checks your recent runs, race chip times, shoes, and how many days a week you actually like to run.
 4. **Asks 3 quick questions:**
    * **Mode 1 (`Full AI Coach & Pacer`)** or **Mode 2 (`Bring Your Own Coach`)**?

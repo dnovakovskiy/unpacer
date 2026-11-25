@@ -3,10 +3,12 @@
 Unpacer CLI: Garmin Connect & Strava Telemetry + Structured Running & Strength Workout Builder.
 """
 import argparse
+import getpass
 import json
 import os
 import sys
 import time
+from urllib.parse import parse_qs, urlparse
 import requests
 from garminconnect import Garmin
 
@@ -21,6 +23,100 @@ DEFAULT_VAULT = os.path.expanduser("~/.unpacer/vault")
 VAULT_DIR = os.path.expanduser(os.environ.get("UNPACER_VAULT_DIR", DEFAULT_VAULT))
 
 DRILLS_URL = "https://youtube.com/shorts/HFVc139J8ME?si=debH58mKx8ewQUh4"
+
+
+def ensure_cred_dir() -> None:
+    os.makedirs(CRED_DIR, mode=0o700, exist_ok=True)
+    try:
+        os.chmod(CRED_DIR, 0o700)
+    except OSError:
+        pass
+
+
+def auth_garmin() -> None:
+    """Interactive local Garmin Connect OAuth login. Password is never saved."""
+    print("Garmin Connect local login (your password is hidden and never saved to disk).")
+    email = input("Garmin Connect email: ").strip()
+    pwd = getpass.getpass("Garmin Connect password: ")
+    api = Garmin(email, pwd, return_on_mfa=True)
+    result = api.login()
+    if isinstance(result, tuple) and len(result) == 2 and result[0] == "needs_mfa":
+        mfa_code = input("Garmin MFA / 2FA code: ").strip()
+        api.resume_login(result[1], mfa_code)
+    ensure_cred_dir()
+    api.client.dump(GARMIN_TOKENS)
+    try:
+        os.chmod(GARMIN_TOKENS, 0o600)
+    except OSError:
+        pass
+    name = "Garmin Athlete"
+    try:
+        name = api.get_full_name() or name
+    except Exception:
+        pass
+    print(f"Connected as {name}! Saved OAuth session token to {GARMIN_TOKENS} (chmod 600).")
+    print("Your password was NOT saved.")
+
+
+def extract_oauth_code(raw_input: str) -> str:
+    """Extract Strava OAuth 'code' from either a full redirect URL or a raw code string."""
+    s = raw_input.strip()
+    if "code=" in s:
+        parsed = urlparse(s)
+        qs = parse_qs(parsed.query)
+        if "code" in qs and qs["code"]:
+            return qs["code"][0].strip()
+    return s
+
+
+def auth_strava() -> None:
+    """Interactive local Strava OAuth setup (no password ever entered)."""
+    print("Strava OAuth setup (no Strava password needed; uses official OAuth).")
+    print("Get your Client ID and Client Secret from https://www.strava.com/settings/api")
+    client_id = input("Strava Client ID: ").strip()
+    client_secret = getpass.getpass("Strava Client Secret (hidden): ").strip()
+    auth_url = (
+        "https://www.strava.com/oauth/authorize"
+        f"?client_id={client_id}"
+        "&response_type=code"
+        "&redirect_uri=http://localhost/exchange_token"
+        "&approval_prompt=force"
+        "&scope=read,activity:read_all,profile:read_all"
+    )
+    print("\n1. Open this URL in your browser and click Authorize:\n")
+    print(f"   {auth_url}\n")
+    print("2. Your browser will redirect to a localhost URL (an error page is normal).")
+    raw = input("3. Paste the full redirect URL (or just the 'code' value): ")
+    code = extract_oauth_code(raw)
+    resp = requests.post(
+        "https://www.strava.com/oauth/token",
+        data={
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "code": code,
+            "grant_type": "authorization_code",
+        },
+        timeout=15,
+    )
+    resp.raise_for_status()
+    tok = resp.json()
+    saved = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "access_token": tok["access_token"],
+        "refresh_token": tok["refresh_token"],
+        "expires_at": tok["expires_at"],
+    }
+    ensure_cred_dir()
+    with open(STRAVA_TOKENS, "w") as f:
+        json.dump(saved, f, indent=2)
+    try:
+        os.chmod(STRAVA_TOKENS, 0o600)
+    except OSError:
+        pass
+    athlete = tok.get("athlete") or {}
+    full_name = f"{athlete.get('firstname', '')} {athlete.get('lastname', '')}".strip() or "Strava Athlete"
+    print(f"Connected as {full_name}! Saved auto-refreshing OAuth tokens to {STRAVA_TOKENS} (chmod 600).")
 
 
 def get_garmin_client() -> Garmin:
@@ -282,6 +378,8 @@ def main():
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("paths", help="Print resolved local credentials and private vault paths")
+    sub.add_parser("auth-garmin", help="Interactive local Garmin Connect login (password hidden, never saved)")
+    sub.add_parser("auth-strava", help="Interactive local Strava OAuth setup (no password needed)")
 
     p_sync = sub.add_parser("recent", help="Fetch recent Garmin & Strava runs")
     p_sync.add_argument("--limit", type=int, default=10)
@@ -317,6 +415,12 @@ def main():
         print(f"GARMIN_TOKENS: {GARMIN_TOKENS} (exists={os.path.exists(GARMIN_TOKENS)})")
         print(f"STRAVA_TOKENS: {STRAVA_TOKENS} (exists={os.path.exists(STRAVA_TOKENS)})")
         print(f"VAULT_DIR:     {VAULT_DIR} (exists={os.path.exists(VAULT_DIR)})")
+        return
+    if args.cmd == "auth-garmin":
+        auth_garmin()
+        return
+    if args.cmd == "auth-strava":
+        auth_strava()
         return
 
     api = get_garmin_client()

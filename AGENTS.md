@@ -47,27 +47,28 @@ You can verify active credential and vault paths at any time with:
 /tmp/venv/bin/python scripts/unpacer_cli.py paths
 ```
 
-### Step 3: Connect Garmin Connect (Required) & Strava (Optional)
-Check if `~/.unpacer/credentials/garmin_tokens.json` already exists. If not:
-1. Ask the user for their Garmin Connect email and password (or offer a one-line local command they can run in their own terminal so their password isn't typed in chat), and save the OAuth session locally:
-   ```bash
-   /tmp/venv/bin/python -c '
-   import getpass, os
-   from garminconnect import Garmin
-   email = input("Garmin Email: ")
-   pwd = getpass.getpass("Garmin Password: ")
-   api = Garmin(email, pwd)
-   api.login()
-   os.makedirs(os.path.expanduser("~/.unpacer/credentials"), mode=0o700, exist_ok=True)
-   api.client.dump(os.path.expanduser("~/.unpacer/credentials/garmin_tokens.json"))
-   print("Saved Garmin tokens to ~/.unpacer/credentials/garmin_tokens.json")
-   '
-   ```
-2. Verify the connection by pulling their last 10 runs:
-   ```bash
-   /tmp/venv/bin/python scripts/unpacer_cli.py recent --limit 10
-   ```
-3. *(Optional)* If the user also uses Strava (for shoe mileage tracking and race photo/chip-time verification), store `client_id`, `client_secret`, `refresh_token`, `access_token`, and `expires_at` in `~/.unpacer/credentials/strava_tokens.json`. `scripts/unpacer_cli.py` will auto-refresh the Strava token on every run.
+### Step 3: Connect Garmin Connect (Required) & Strava (Optional) Without Ever Asking for Passwords in Chat
+Check if `~/.unpacer/credentials/garmin_tokens.json` already exists (`scripts/unpacer_cli.py paths`). If not, **NEVER ask the user to type their password in chat as the default flow.** Choose the right non-creepy path for their environment:
+
+* **Path A (Local Agent: Claude Code, Cursor, Codex, Local Antigravity) - Recommended:**
+  Tell the user: *"I never want to see your password in chat. Run this one command in your own terminal. It logs straight into Garmin Connect, saves a revocable OAuth session token locally in `~/.unpacer/credentials/garmin_tokens.json` (`chmod 600`), and never stores your password."*
+  ```bash
+  /tmp/venv/bin/python scripts/unpacer_cli.py auth-garmin
+  ```
+  *(Optional Strava OAuth, zero password needed: `/tmp/venv/bin/python scripts/unpacer_cli.py auth-strava`)*
+
+* **Path B (Cloud / Remote VM Agent where the user has no local terminal attached to the VM):**
+  Offer two low-friction, zero-password-in-chat choices:
+  1. **Upload a local token file (Best):** Have the user run `python scripts/unpacer_cli.py auth-garmin` once on their own computer and drag-and-drop `~/.unpacer/credentials/garmin_tokens.json` into the chat. Their password never enters the chat or cloud VM.
+  2. **Temporary Self-Destructing Private Google Doc (Zero-terminal option if Google Drive is connected):** Have the user paste their login into a private Google Doc, share the Doc link once, and immediately exchange it for `garmin_tokens.json` (`chmod 600`), delete any local export, and move the Doc to Trash so the password never sits in chat history or Drive.
+
+* **Path C (Try First, Connect Later):**
+  If the user prefers not to connect any account yet, invite them to drop a `.gpx` race course file or paste recent race splits so they can test race pacing and training plans with zero login.
+
+Once connected, verify the session by pulling their last 10 runs:
+```bash
+/tmp/venv/bin/python scripts/unpacer_cli.py recent --limit 10
+```
 
 ### Step 4: Build Their Runner Profile (Forensics + 3 Quick Questions)
 Once Garmin is connected, pull their recent running history and ask the user **3 quick questions**:
