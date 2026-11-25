@@ -59,7 +59,7 @@ Check if `~/.unpacer/credentials/garmin_tokens.json` already exists. If not:
    api = Garmin(email, pwd)
    api.login()
    os.makedirs(os.path.expanduser("~/.unpacer/credentials"), mode=0o700, exist_ok=True)
-   api.garmin.garth.dump(os.path.expanduser("~/.unpacer/credentials/garmin_tokens.json"))
+   api.client.dump(os.path.expanduser("~/.unpacer/credentials/garmin_tokens.json"))
    print("Saved Garmin tokens to ~/.unpacer/credentials/garmin_tokens.json")
    '
    ```
