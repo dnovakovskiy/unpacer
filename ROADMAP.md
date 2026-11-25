@@ -11,6 +11,7 @@ Built through real training blocks, travel weeks, and races (`2026 to 2027`).
 - [x] **Multi-Gear Race Pacers:** Terrain-split race workouts (`5 to 7` gears) with `+2 to +3 sec/km` GPS drift built in.
 - [x] **Phone-Free Gym on the Wrist:** Animated Garmin Strength workouts (`Free-Gym A`, `Free-Gym B`, `8m Soleus Finisher`) with reps, `kg`, and auto-rest timers.
 - [x] **Race-Photo & Shoe Forensics:** Chip-vs-watch split audits from Strava photos, `VDOT` vs. `VO₂max` checks, and late-marathon carbon shoe comparisons.
+- [x] **Bring Your Own Private Vault & Zero-Password-in-Chat Auth:** Strict 3-tier privacy boundary (`<athlete>-running-<year>` vault via Local/iCloud/Obsidian, Google Drive, or private GitHub repo) + local masked `auth-garmin` and `auth-strava` OAuth setup (`~/.unpacer/credentials/`, `chmod 700`).
 
 ---
 
