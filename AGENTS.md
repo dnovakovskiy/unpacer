@@ -6,12 +6,16 @@ Welcome, Agent. If a human pointed you to this repository (`https://github.com/d
 
 ---
 
-## 1. Golden Privacy Rule (Read First!)
+## 1. Golden Privacy Rule & "Bring Your Own Private Vault" Strategy (Read First!)
 
-* **NEVER commit any user's personal training data, race calendar, travel dates, telemetry JSONs, or OAuth tokens to this or any public Git repository.**
-* Store all personal runner data strictly in:
-  * The user's private local vault (`~/.unpacer/vault/` and `~/.unpacer/credentials/`, which are git-ignored), OR
-  * The user's private Google Docs / Google Drive (if they have Google Workspace plugins connected).
+Unpacer enforces a strict 3-tier data boundary:
+
+1. **Public Repo (`dnovakovskiy/unpacer`):** Engine, agent skills, and CLI only. **NEVER commit any user's personal training plans, race calendars, travel dates, telemetry JSONs, visuals, or OAuth tokens to this or any public Git repository.**
+2. **OAuth Credentials (Strictly Local-Only):** Store Garmin and Strava tokens exclusively in `~/.unpacer/credentials/` (`chmod 700`, override with `$UNPACER_CRED_DIR`). Never sync credentials to Git, iCloud, or Google Drive.
+3. **Personal Athlete Vault (`<athlete>-running-<year>`):** All personal athlete data (Master Plan, Race Playbook, telemetry cache, course GPX files, and visuals) lives in a private backend chosen by the user during onboarding, named using the standard multi-athlete convention **`<athlete>-running-<year>`** (for example, `smith-running-2027` or `alex-running-2026`):
+   * **(A) Local / iCloud / Obsidian Folder (Default):** `~/.unpacer/vault/<athlete>-running-<year>/` (or an iCloud / Obsidian directory pointed to by `$UNPACER_VAULT_DIR`).
+   * **(B) Private Google Drive + Google Docs:** A private Drive folder named `<athlete>-running-<year>` containing the Master Plan Doc, Race Playbook Doc, and raw telemetry subfolder.
+   * **(C) Separate Private GitHub Repo:** A private repository named `<athlete>-running-<year>` cloned locally and pointed to by `$UNPACER_VAULT_DIR` (with OAuth credentials kept strictly outside the repo in `~/.unpacer/credentials/`).
 
 ---
 
@@ -21,9 +25,9 @@ Do not dump terminal commands on the user. Run the setup steps for them and guid
 
 ### Step 1: Install the Skill & Python Dependencies
 1. Clone this repository or copy [`skills/unpacer/SKILL.md`](skills/unpacer/SKILL.md) and [`scripts/unpacer_cli.py`](scripts/unpacer_cli.py) into your agent workspace / skills directory.
-2. Create the private local directories outside the repo:
+2. Create the strictly local-only credentials directory outside the repo:
    ```bash
-   mkdir -p ~/.unpacer/credentials ~/.unpacer/vault
+   mkdir -p ~/.unpacer/credentials
    chmod 700 ~/.unpacer/credentials
    ```
 3. Create a lightweight Python environment with `garminconnect`:
@@ -32,7 +36,18 @@ Do not dump terminal commands on the user. Run the setup steps for them and guid
    ```
    *(Fallback if `uv` is not installed: `python3 -m venv ~/.unpacer/venv && ~/.unpacer/venv/bin/pip install "garminconnect==0.3.2" curl-cffi requests`)*
 
-### Step 2: Connect Garmin Connect (Required) & Strava (Optional)
+### Step 2: Pick One Private Athlete Vault Backend (`<athlete>-running-<year>`)
+Ask the user which **one** private backend they want for their personal vault (Master Plan, Race Playbook, telemetry cache, and visuals), using the standard multi-athlete naming convention `<athlete>-running-<year>`:
+* **Option A (Local / iCloud / Obsidian):** Create `~/.unpacer/vault/<athlete>-running-<year>/` (or set `UNPACER_VAULT_DIR` to their iCloud/Obsidian folder).
+* **Option B (Private Google Drive + Docs):** Create a private Drive folder named `<athlete>-running-<year>` (and optionally set `UNPACER_VAULT_DIR` for local cache mirrors).
+* **Option C (Separate Private GitHub Repo):** Create or clone a private repo named `<athlete>-running-<year>`, point `UNPACER_VAULT_DIR` to its local clone, and verify credentials remain strictly in `~/.unpacer/credentials/`.
+
+You can verify active credential and vault paths at any time with:
+```bash
+/tmp/venv/bin/python scripts/unpacer_cli.py paths
+```
+
+### Step 3: Connect Garmin Connect (Required) & Strava (Optional)
 Check if `~/.unpacer/credentials/garmin_tokens.json` already exists. If not:
 1. Ask the user for their Garmin Connect email and password (or offer a one-line local command they can run in their own terminal so their password isn't typed in chat), and save the OAuth session locally:
    ```bash
@@ -43,7 +58,7 @@ Check if `~/.unpacer/credentials/garmin_tokens.json` already exists. If not:
    pwd = getpass.getpass("Garmin Password: ")
    api = Garmin(email, pwd)
    api.login()
-   os.makedirs(os.path.expanduser("~/.unpacer/credentials"), exist_ok=True)
+   os.makedirs(os.path.expanduser("~/.unpacer/credentials"), mode=0o700, exist_ok=True)
    api.garmin.garth.dump(os.path.expanduser("~/.unpacer/credentials/garmin_tokens.json"))
    print("Saved Garmin tokens to ~/.unpacer/credentials/garmin_tokens.json")
    '
@@ -54,13 +69,13 @@ Check if `~/.unpacer/credentials/garmin_tokens.json` already exists. If not:
    ```
 3. *(Optional)* If the user also uses Strava (for shoe mileage tracking and race photo/chip-time verification), store `client_id`, `client_secret`, `refresh_token`, `access_token`, and `expires_at` in `~/.unpacer/credentials/strava_tokens.json`. `scripts/unpacer_cli.py` will auto-refresh the Strava token on every run.
 
-### Step 3: Build Their Runner Profile (Forensics + 3 Quick Questions)
+### Step 4: Build Their Runner Profile (Forensics + 3 Quick Questions)
 Once Garmin is connected, pull their recent running history and ask the user **3 quick questions**:
 1. **Pick Your Mode:**
    * **Mode 1: Full AI Coach & Pacer** (You design the `X`-week training plan, weekly workouts, race strategy, and push everything to the watch).
    * **Mode 2: Bring Your Own Coach** (They have a human coach on Final Surge / Telegram / WhatsApp; you never override their coach, and instead translate their coach's text workouts into watch gauges, audit splits, and build race-day course pacers).
 2. **Upcoming Races & Real-Life Travel:** What races are on the calendar, what are the goal times, and what upcoming trips (heat, cold, altitude, busy work weeks) should the plan adapt around?
-3. **How Recent Races Felt:** How did their last 1 to 2 races feel (legs, breathing, stomach/caffeine, hills, water stations)? Record these lessons in their private **Race Playbook**.
+3. **How Recent Races Felt:** How did their last 1 to 2 races feel (legs, breathing, stomach/caffeine, hills, water stations)? Record these lessons in their private **Race Playbook** inside their `<athlete>-running-<year>` vault.
 
 ---
 

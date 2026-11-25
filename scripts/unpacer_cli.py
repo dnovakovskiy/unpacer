@@ -12,9 +12,13 @@ from garminconnect import Garmin
 
 DEFAULT_CRED = os.path.expanduser("~/.unpacer/credentials")
 FALLBACK_CRED = "/home/antigravity/.gemini/jetski/credentials"
-CRED_DIR = os.environ.get("UNPACER_CRED_DIR", DEFAULT_CRED if os.path.exists(DEFAULT_CRED) else FALLBACK_CRED)
+_AUTO_CRED = DEFAULT_CRED if os.path.exists(DEFAULT_CRED) or not os.path.exists(FALLBACK_CRED) else FALLBACK_CRED
+CRED_DIR = os.path.expanduser(os.environ.get("UNPACER_CRED_DIR", _AUTO_CRED))
 GARMIN_TOKENS = os.path.join(CRED_DIR, "garmin_tokens.json")
 STRAVA_TOKENS = os.path.join(CRED_DIR, "strava_tokens.json")
+
+DEFAULT_VAULT = os.path.expanduser("~/.unpacer/vault")
+VAULT_DIR = os.path.expanduser(os.environ.get("UNPACER_VAULT_DIR", DEFAULT_VAULT))
 
 DRILLS_URL = "https://youtube.com/shorts/HFVc139J8ME?si=debH58mKx8ewQUh4"
 
@@ -274,11 +278,14 @@ def build_finalsurge_interval_workout(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Running Coach CLI (Garmin + Strava + Final Surge Builder)")
+    parser = argparse.ArgumentParser(description="Unpacer CLI (Garmin + Strava + Structured Workout Builder)")
     sub = parser.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser("paths", help="Print resolved local credentials and private vault paths")
 
     p_sync = sub.add_parser("recent", help="Fetch recent Garmin & Strava runs")
     p_sync.add_argument("--limit", type=int, default=10)
+    p_sync.add_argument("--save", action="store_true", help="Save recent activities JSON into UNPACER_VAULT_DIR")
 
     p_up = sub.add_parser("upload-interval", help="Upload Final Surge style interval workout to Garmin Connect")
     p_up.add_argument("--name", required=True, help="Workout name, e.g. '4x2km/2min'")
@@ -301,9 +308,17 @@ def main():
     p_sched.add_argument("--date", required=True, help="YYYY-MM-DD")
 
     p_routes = sub.add_parser("routes", help="List Strava saved routes (and GPX profile) + Garmin synced courses")
-    p_routes.add_argument("--export-gpx-id", help="Optional Strava route ID to download GPX elevation profile")
+    p_routes.add_argument("--export-gpx-id", help="Optional Strava route ID to download GPX elevation profile into UNPACER_VAULT_DIR")
 
     args = parser.parse_args()
+
+    if args.cmd == "paths":
+        print(f"CRED_DIR:      {CRED_DIR} (exists={os.path.exists(CRED_DIR)})")
+        print(f"GARMIN_TOKENS: {GARMIN_TOKENS} (exists={os.path.exists(GARMIN_TOKENS)})")
+        print(f"STRAVA_TOKENS: {STRAVA_TOKENS} (exists={os.path.exists(STRAVA_TOKENS)})")
+        print(f"VAULT_DIR:     {VAULT_DIR} (exists={os.path.exists(VAULT_DIR)})")
+        return
+
     api = get_garmin_client()
 
     if args.cmd == "recent":
@@ -312,6 +327,12 @@ def main():
             dist_km = (a.get("distance") or 0) / 1000.0
             dur_s = a.get("duration") or 0
             print(f"{a.get('startTimeLocal')} | ID {a.get('activityId')} | {a.get('activityName')} | {dist_km:.2f} km | {dur_s/60:.1f} min | HR {a.get('averageHR')}")
+        if args.save:
+            os.makedirs(VAULT_DIR, exist_ok=True)
+            out_path = os.path.join(VAULT_DIR, "recent_garmin_activities.json")
+            with open(out_path, "w") as f:
+                json.dump(acts, f, indent=2)
+            print(f"Saved {len(acts)} activities to {out_path}")
     elif args.cmd == "routes":
         token = get_strava_token()
         headers = {"Authorization": f"Bearer {token}"}
@@ -323,7 +344,8 @@ def main():
         if args.export_gpx_id:
             rg = requests.get(f"https://www.strava.com/api/v3/routes/{args.export_gpx_id}/export_gpx", headers=headers, timeout=15)
             rg.raise_for_status()
-            out_path = f"/tmp/strava_route_{args.export_gpx_id}.gpx"
+            os.makedirs(VAULT_DIR, exist_ok=True)
+            out_path = os.path.join(VAULT_DIR, f"strava_route_{args.export_gpx_id}.gpx")
             with open(out_path, "w") as f:
                 f.write(rg.text)
             print(f"Saved GPX ({len(rg.text)} bytes) to {out_path}")

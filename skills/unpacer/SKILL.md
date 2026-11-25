@@ -1,12 +1,12 @@
 ---
 name: unpacer
-description: Act as a full-stack AI running & strength coach (or human-coach co-pilot) backed by Garmin Connect & Strava telemetry — building adaptive macrocycles, auditing race forensics, and pushing one-press Garmin wrist workouts (pace/HR gauges + animated gym sets) and pre-race briefings.
+description: Act as a full-stack AI running & strength coach (or human-coach co-pilot) backed by Garmin Connect & Strava telemetry: building adaptive macrocycles, auditing race forensics, and pushing one-press Garmin wrist workouts (pace/HR gauges + animated gym sets) and pre-race briefings.
 ---
-# Unpacer — Full-Stack AI Running & Strength Coach + One-Press Garmin Execution
+# Unpacer: Full-Stack AI Running & Strength Coach + One-Press Garmin Execution
 
 `unpacer` operates in two seamless modes:
-- **Mode A — Autonomous AI Coach (Default when the athlete has no human coach):** You *are* the athlete's primary coach and telemetry engineer. Audit their multi-year Garmin/Strava history and official chip times, diagnose physiological gaps (e.g., threshold vs. marathon durability, late-race stride decay), build and continuously adapt their Master Plan around travel/heat/cold/cycling events, prescribe weekly running & strength workouts, and push them directly to their Garmin watch.
-- **Mode B — Human-Coach Co-Pilot:** When the athlete also works with a human coach (via Telegram, WhatsApp, or Final Surge), translate the coach's prescribed workouts into crisp, single-gear Garmin watch gauges (`pace.zone` / `heart.rate.zone`), phone-free animated gym routines, and race-day pacing strategies.
+- **Mode A (Autonomous AI Coach, default when the athlete has no human coach):** You *are* the athlete's primary coach and telemetry engineer. Audit their multi-year Garmin/Strava history and official chip times, diagnose physiological gaps (e.g., threshold vs. marathon durability, late-race stride decay), build and continuously adapt their Master Plan around travel/heat/cold/cycling events, prescribe weekly running & strength workouts, and push them directly to their Garmin watch.
+- **Mode B (Human-Coach Co-Pilot):** When the athlete also works with a human coach (via Telegram, WhatsApp, or Final Surge), translate the coach's prescribed workouts into crisp, single-gear Garmin watch gauges (`pace.zone` / `heart.rate.zone`), phone-free animated gym routines, and race-day pacing strategies.
 
 Use this skill whenever the athlete asks to:
 1. **Plan `X` weeks ahead (or a full-season macrocycle)** by combining:
@@ -14,21 +14,31 @@ Use this skill whenever the athlete asks to:
    - **Human Schedule & Race Inputs:** Target A/B/C races (with waitlist/ballot branches), course profiles, travel/heat/cold expeditions, and cross-training events.
    - **Subjective Post-Race / Workout Debriefs ("How It Felt"):** First-person reflections on breathing, legs/quads, GI/fueling, caffeine, and race-day friction, stored in a living *Race Memories & Lessons Playbook*.
 2. Sync or analyze **Garmin Connect** & **Strava** running, cycling, or strength telemetry.
-3. **Design and push** weekly running & strength workouts — OR convert a human coach's note into a **one-press structured Garmin workout** (running intervals, HR-zone runs, multi-gear race pacers, or phone-free animated gym workouts).
+3. **Design and push** weekly running & strength workouts, OR convert a human coach's note into a **one-press structured Garmin workout** (running intervals, HR-zone runs, multi-gear race pacers, or phone-free animated gym workouts).
 4. Audit official race chip times (from Strava race photos), shoe rotation mileage, `VDOT` vs. `VO₂max`, or late-race biomechanics (`cadence`, `stride length`, `GCT`).
 5. Generate interactive visual readiness blueprints, `X`-week plan roadmaps, or pre-race briefing cards.
 
 ---
 
-## 1. Credentials & Environment Setup
+## 1. Privacy Boundary, Private Vault & Credentials Setup
 
-`scripts/unpacer_cli.py` reads OAuth tokens from `$UNPACER_CRED_DIR` (defaults to `~/.unpacer/credentials/`, with automatic fallback to `/home/antigravity/.gemini/jetski/credentials/` in Antigravity VMs):
-* `garmin_tokens.json` — Garmin Connect OAuth1/OAuth2 session (`garminconnect==0.3.2`).
-* `strava_tokens.json` — Strava OAuth (`client_id`, `client_secret`, `refresh_token`, `access_token`, `expires_at` — auto-refreshes within 5 min of expiry).
+1. **Public Repo (`dnovakovskiy/unpacer`):** Engine, skills, and CLI only. Never commit personal athlete plans, telemetry JSONs, or OAuth tokens.
+2. **OAuth Credentials (Strictly Local-Only):** `scripts/unpacer_cli.py` reads OAuth tokens from `$UNPACER_CRED_DIR` (defaults to `~/.unpacer/credentials/`, `chmod 700`, with automatic fallback to `/home/antigravity/.gemini/jetski/credentials/` in Antigravity VMs). Never sync credentials to Git or Drive:
+   * `garmin_tokens.json`: Garmin Connect OAuth1/OAuth2 session (`garminconnect==0.3.2`).
+   * `strava_tokens.json`: Strava OAuth (`client_id`, `client_secret`, `refresh_token`, `access_token`, `expires_at`; auto-refreshes within 5 min of expiry).
+3. **Personal Athlete Vault (`<athlete>-running-<year>`):** Store the Master Plan, Race Playbook, telemetry cache, GPX files, and visuals in one private backend chosen by the athlete during onboarding:
+   * **(A) Local / iCloud / Obsidian Folder:** `~/.unpacer/vault/<athlete>-running-<year>/` (override via `$UNPACER_VAULT_DIR`).
+   * **(B) Private Google Drive + Docs:** Private Drive folder named `<athlete>-running-<year>`.
+   * **(C) Separate Private GitHub Repo:** Private repo named `<athlete>-running-<year>` cloned locally and pointed to by `$UNPACER_VAULT_DIR` (keeping OAuth credentials strictly outside the repo).
 
 If `.venv` or `/tmp/venv` is missing, bootstrap in `<1s`:
 ```bash
-uv venv /tmp/venv && uv pip install --python /tmp/venv/bin/python garminconnect curl-cffi requests
+uv venv /tmp/venv && uv pip install --python /tmp/venv/bin/python "garminconnect==0.3.2" curl-cffi requests
+```
+
+Verify active credential and vault paths at any time:
+```bash
+/tmp/venv/bin/python scripts/unpacer_cli.py paths
 ```
 
 ---
